@@ -1,0 +1,111 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class EnemyAi : MonoBehaviour
+{
+    [SerializeField] private GameObject player, inimigo;
+    [SerializeField] private float speed, impulse;
+    [SerializeField] private Rigidbody2D enemyBody;
+    [SerializeField] private LayerMask ledgeLayer;
+    [SerializeField] private Transform ledgeCheck, healthBar;
+
+
+    private float maxHealth = 1;// a quantidade de vida que o inimigo tem
+    private float currentHealth;// seria a quantidade de vida depois de receber um tiro
+
+
+    private bool flip;
+
+
+
+    // Start is called before the first frame update
+    void Start()
+    {
+        player = GameObject.FindGameObjectWithTag("Player");
+        currentHealth = maxHealth;
+        
+        if(healthBar == null)
+        {
+            healthBar = transform.Find("HealthBar");
+        }
+    }
+
+    // Update is called once per frame
+    void Update()
+    {
+      // Vector2 distance = transform.position - player.transform.position;
+      
+
+        transform.position = Vector2.MoveTowards(transform.position, player.transform.position, speed * Time.deltaTime);
+
+        if (IsLedge()== true)
+        {
+            enemyBody.velocity = new Vector2(enemyBody.velocity.x, enemyBody.velocity.y * impulse);
+        }
+
+
+       
+    }
+    private void FixedUpdate()
+    {
+        Vector2 scale = transform.localScale;
+        if(player.transform.position.x > transform.position.x)
+        {
+            scale.x = Mathf.Abs(scale.x) * (flip ? -1 : 1);
+        }
+        else
+        {
+            scale.x = Mathf.Abs(scale.x) * -1 * (flip ? -1 : 1);
+        }
+
+        transform.localScale = scale;
+
+    }
+    
+
+    private bool IsLedge()
+    {
+
+        return Physics2D.OverlapCircle(ledgeCheck.position, 0.1f, ledgeLayer);
+
+    }
+    private void OnTriggerEnter2D(Collider2D collision)
+    {
+        if (collision.gameObject.tag == "Bullet")
+        {
+            TakeDamage(0.2f);
+            if (currentHealth == 0)
+            {
+                Destroy(gameObject);
+               // effeito blasfemous.
+
+            }
+
+        }
+        
+    }
+
+
+    public void TakeDamage(float damage)
+    {
+     
+
+        currentHealth -= damage;// se eu tirar 20 maxHealth até chegar a zero o inimigo morre
+      
+        if (currentHealth <= 0)// 100 -100;
+        {
+            currentHealth = 0; // a quantidade de vida não pode ser menor zero tem ser igual a zero
+        }
+
+        UpdateHealtBar();
+    }
+    private void UpdateHealtBar()
+    {
+        float scaleFactor = currentHealth;
+
+
+        healthBar.localScale = new Vector2(scaleFactor, 1f);
+
+    }
+}
